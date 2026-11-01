@@ -81,7 +81,7 @@ export default function Access() {
   };
 
   const samples = {
-    curl: `curl https://remindify.app/api/v1/obligations \\
+    curl: `curl https://remindify-paypal.vercel.app/api/v1/obligations \\
   -H "Authorization: Bearer ${token}" \\
   -H "Content-Type: application/json" \\
   -d '{
