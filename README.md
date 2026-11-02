@@ -9,9 +9,9 @@ Remindify gives every obligation an owner, a backup, a risk level and a definiti
 ## What to try
 
 1. **Capture:** Turn a renewal notice, filing or handoff into a proposed obligation. Review the parsed details before saving.
-2. **Govern work:** See owners, backups, risk, agent scopes and autonomy limits together. Run the built-in sandbox executor to inspect an agent run and its proof record.
+2. **Govern and analyze work:** In **Obligations → AG Grid / AG Studio**, sort and filter the register, then compare authorized and captured-awaiting-payout amounts by risk band. Five custom cell renderers show obligation details, risk and deadline, agent passport, PayPal escrow state, and autonomy controls. Run the built-in sandbox executor to inspect an agent run and its proof record.
 3. **Check evidence:** Open **Trust** to review proof receipts and the PayPal ledger. The seeded escrow is labelled as a rehearsal and cannot settle; create a fresh PayPal Sandbox authorization for a full capture and payout.
-4. **Inspect agent access:** Review the scoped API and MCP surfaces under **Agent access**.
+4. **Inspect agent access:** Review the scoped API and MCP surfaces under **Agent access**. MCP can file and audit proof; an authenticated human still releases an escrow.
 
 The app and core demo flows work without third-party credentials. Capture and proof review use deterministic local fallbacks when Gemini is not configured. PayPal payment and payout actions require PayPal Sandbox credentials.
 
@@ -24,7 +24,7 @@ npm ci
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173). Create an account to open a private workspace seeded with example obligations and agents. The development server starts the API on port `4178` and the Vite app on port `5173`.
+Open [http://localhost:5173](http://localhost:5173). Create an account to open a private workspace seeded with example obligations and agents. The development server starts the API on port `4178` and the Vite app on port `5173`. For local PayPal Sandbox requests, `npm run dev` and `npm start` load only `PAYPAL_*` variables from `.env` and `.env.local`; they intentionally do not load `DATABASE_URL`, keeping local data in SQLite.
 
 To run the production build locally:
 
@@ -78,6 +78,21 @@ npm run build     # client, server-rendered pages and SEO assets
 ```
 
 The stack is React, TypeScript, Vite and Node.js. Local development uses SQLite; deployments use Postgres. See [SECURITY.md](./SECURITY.md) for the security reporting policy.
+
+## What was added for this submission
+
+- **PayPal rail:** The APIMatic-generated PayPal Server SDK handles Orders and authorization/capture; the Agent access page labels that integration with an APIMatic-generated SDK badge. The server verifies captured amount and currency against stored obligations and uses idempotent request IDs. Payouts, invoicing and webhook verification use the REST client where the SDK path does not cover the required operations.
+- **Signed webhook:** `POST /api/paypal/webhook` is handled before session-cookie authentication because PayPal cannot send a Remindify session. Events are applied only after PayPal signature verification; configure `PAYPAL_WEBHOOK_ID` to enable application.
+- **AG Grid / AG Studio register:** Five custom cell renderers present obligation details, risk/deadline, agent passport, PayPal escrow, and autonomy. Operators can sort/filter rows and compare authorized holds and captured amounts awaiting payout, aggregated by risk band. This summary is an app-level aggregation; it does not claim AG Grid Enterprise row grouping or cross-filtering.
+- **MCP proof audit:** The MCP server can request an audit of a filed receipt through a dedicated `trust:audit` key scope. It cannot release escrows or move PayPal funds; release remains an authenticated human action in the app.
+
+## API access
+
+- `/api/auth/*`, `/api/health`, and signed `/api/digest/*` links do not require a workspace session.
+- `/api/paypal/webhook` is callable without a Remindify session, but only PayPal-signature-verified events are applied.
+- `/api/v1/*` requires a workspace machine key with the endpoint's scope; it is not anonymous access.
+- `/api/cron/*` requires a configured scheduler secret. The built-in sandbox executor accepts only timestamped, HMAC-signed requests.
+- Other workspace `/api/*` routes require a signed-in session cookie. In particular, PayPal capture, escrow release, and payout routes are not available to machine keys.
 
 ## Honest limitations
 

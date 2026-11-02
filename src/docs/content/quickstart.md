@@ -53,7 +53,7 @@ The ceiling caps the obligation's own autonomy. An agent with a `prepare` ceilin
 
 Open **Agent access**, choose **Create key**, and copy the secret immediately. It is shown once.
 
-The four scopes are:
+The five scopes are:
 
 | Scope | What it allows |
 | --- | --- |
@@ -61,8 +61,9 @@ The four scopes are:
 | `obligations:write` | Create obligations, complete them, file receipts |
 | `risk:read` | Portfolio risk and trust snapshots |
 | `agents:read` | Read the agent roster |
+| `trust:audit` | Audit a filed proof receipt; does not release an escrow |
 
-New keys default to all four if you omit `scopes`:
+New keys default to all five if you omit `scopes`:
 
 ```bash
 curl -X POST "$REMINDIFY_URL/api/keys" \
